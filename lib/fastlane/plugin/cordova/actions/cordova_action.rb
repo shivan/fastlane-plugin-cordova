@@ -12,6 +12,7 @@ module Fastlane
         key_password: 'password',
         keystore_alias: 'alias',
         build_number: 'versionCode',
+        version_name: 'versionName',
         min_sdk_version: 'gradleArg=-PcdvMinSdkVersion',
         cordova_no_fetch: 'cordovaNoFetch'
       }
@@ -20,7 +21,8 @@ module Fastlane
         type: 'packageType',
         team_id: 'developmentTeam',
         provisioning_profile: 'provisioningProfile',
-        build_flag: 'buildFlag'
+        build_flag: 'buildFlag',
+        version_name: 'versionName'
       }
 
       def self.get_platform_args(params, args_map)
@@ -108,6 +110,17 @@ module Fastlane
             plist_path: "#{self.get_app_name}/#{self.get_app_name}-Info.plist",
             block: lambda { |plist|
               plist['CFBundleVersion'] = cf_bundle_version
+            }
+          )
+        end
+
+        if params[:platform].to_s == 'ios' && !params[:version_name].to_s.empty?
+          cf_bundle_short_version = params[:version_name].to_s
+          Actions::UpdateInfoPlistAction.run(
+            xcodeproj: "./platforms/ios/#{self.get_app_name}.xcodeproj",
+            plist_path: "#{self.get_app_name}/#{self.get_app_name}-Info.plist",
+            block: lambda { |plist|
+              plist['CFBundleShortVersionString'] = cf_bundle_short_version
             }
           )
         end
@@ -275,6 +288,13 @@ module Fastlane
             is_string: true,
             optional: true,
             default_value: ''
+          ),
+          FastlaneCore::ConfigItem.new(
+            key: :version_name,
+            env_name: "VERSION_NAME",
+            description: "Version name for android and ios (ie. 1.0.0)",
+            is_string: true,
+            optional: true
           )
         ]
       end
